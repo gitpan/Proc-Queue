@@ -1,0 +1,18 @@
+Revision history for Perl extension Fork::Queue.
+
+0.04 Corrected bug that replace waitpid with an unexistant function
+
+0.03 New set of high level functions added
+
+0.02 Added README file automatically generated from embedded pod
+     documentation.
+
+     Added fork_now function
+
+     Exporter stuff integrated
+
+
+0.01  Wed Mar 14 21:57:34 2001
+	- original version; created by h2xs 1.20 with options
+		-A -X -O -n Fork::Queue
+
