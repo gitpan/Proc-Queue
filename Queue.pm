@@ -20,7 +20,7 @@ our %EXPORT_TAGS = ( all => [ qw( fork_now
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw();
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 # parameters
 my $queue_size=4;
@@ -474,7 +474,7 @@ function name to be imported.
 
 =head2 BUGS
 
-None that I know, but this is just version 0.04!
+None that I know, but this is just version 0.06!
 
 The module has only been tested under Solaris 2.6
 

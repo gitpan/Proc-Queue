@@ -1,4 +1,10 @@
-Revision history for Perl extension Fork::Queue.
+Revision history for Perl extension Proc::Queue (formely Fork::Queue).
+
+
+0.06 Corrected bug in Makefile.PL that caused the module to install as
+     Fork::Queue
+
+0.05 Module name changed to Proc::Queue from Fork::Queue
 
 0.04 Corrected bug that replace waitpid with an unexistant function
 
