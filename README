@@ -44,9 +44,9 @@ SYNOPSIS
       1 while wait != -1;
 
 DESCRIPTION
-    This module lets you parallelice one program using the `fork', `exit',
-    `wait' and `waitpid' calls as usual and without the need to take care of
-    creating too much processes and overloading the machine.
+    This module lets you parallelice a perl program using the `fork',
+    `exit', `wait' and `waitpid' calls as usual and without the need to take
+    care of creating too much processes and overloading the machine.
 
     It works redefining `fork', `exit', `wait' and `waitpid' functions so
     old programs do not have to be modified to use this module (only the
@@ -76,8 +76,8 @@ DESCRIPTION
   EXPORT_OK
 
     Functions `fork_now', `waitpids', `run_back', `run_back_now',
-    `all_exit_ok' and `running_now' can be imported. Tag `:all' is defined
-    to import all of them.
+    `all_exit_ok', `running_now', `system_back' and `system_back_now' can be
+    imported. Tag `:all' is defined to import all of them.
 
   FUNCTIONS
 
@@ -106,7 +106,7 @@ DESCRIPTION
 
     fork_now()
         Sometimes you would need to fork a new child without waiting for
-        other child to exit if the queue is full, `fork_now' does that. It
+        other childs to exit if the queue is full, `fork_now' does that. It
         is exportable so you can do...
 
           use Proc::Queue size => 5, qw(fork_now), debug =>1;
@@ -127,6 +127,15 @@ DESCRIPTION
 
     run_back_now(\&code), run_back_now { code }
         A mix between run_back and fork_now.
+
+    system_back(@command)
+        Similar to the `system' call but runs the command in the background
+        and waits for some childs to exit first if there are already too
+        many childs running.
+
+    system_back_now(@command)
+        As `system_back' but without checking if the maximun number of
+        childs allowed has been reached.
 
     all_exit_ok(@pid)
         Do a waitpids call and test that all the processes exit with code 0.
@@ -152,7 +161,7 @@ DESCRIPTION
 
   BUGS
 
-        None that I know, but this is just version 0.08!
+        None that I know, but this is just version 0.09!
 
         The module has only been tested under Solaris 2.6
 

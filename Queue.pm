@@ -14,13 +14,15 @@ our %EXPORT_TAGS = ( all => [ qw( fork_now
 				  waitpids
 				  run_back
 				  run_back_now
+				  system_back
+				  system_back_now
 				  all_exit_ok
 				  running_now ) ] );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw();
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 # parameters
 my $queue_size=4; # max number of councurrent processes running.
@@ -88,11 +90,11 @@ sub debug {
   if(defined $d) {
     if ($d) {
       $debug=1;
-      carp "Debug mode is now on for Proc::Queue module";
+      carp "Debug mode is now ON for Proc::Queue module";
     }
     else {
       $debug=0;
-      carp "Debug mode is now off for Proc::Queue module" if $old_debug;
+      carp "Debug mode is now OFF for Proc::Queue module" if $old_debug;
     }
   }
   return $old_debug;
@@ -104,11 +106,11 @@ sub trace {
   if(defined $t) {
     if ($t) {
       $trace=1;
-      carp "Trace mode is now on for Proc::Queue module" if $debug;
+      carp "Trace mode is now ON for Proc::Queue module" if $debug;
     }
     else {
       $trace=0;
-      carp "Trace mode is now off for Proc::Queue module" if $debug;
+      carp "Trace mode is now OFF for Proc::Queue module" if $debug;
     }
   }
   return $old_trace;
@@ -316,6 +318,28 @@ sub run_back_now (&) {
   return _run_back(1,$code)
 }
 
+sub _system_back {
+  my $now=shift;
+  carp "Proc::Queue::_system_back($now, ".join(", ",@_).") called" if $trace and $debug;
+  my $f=$now ? fork_now : new_fork;
+  if(defined($f) and $f==0) {
+    carp "Running exec(".join(", ",@_).") in forked child $$" if $debug;
+    { exec(@_) }
+    carp "exec(".join(", ",@_).") failed" if $debug;
+  }
+  return $f;
+}
+
+sub system_back {
+  carp "Proc::Queue::system_back(".join(", ",@_).") called" if $trace;
+  return _system_back(0,@_);
+}
+
+sub system_back_now {
+  carp "Proc::Queue::system_back_now(".join(", ",@_).") called" if $trace;
+  return _system_back(1,@_);
+}
+
 sub all_exit_ok {
   carp "Proc::Queue::all_exit_ok(".join(", ",@_).")" if $trace;
   my @result=waitpids(@_);
@@ -397,7 +421,7 @@ process running
 
 =head1 DESCRIPTION
 
-This module lets you parallelice one program using the C<fork>,
+This module lets you parallelice a perl program using the C<fork>,
 C<exit>, C<wait> and C<waitpid> calls as usual and without the need to
 take care of creating too much processes and overloading the machine.
 
@@ -430,8 +454,8 @@ calls.
 =head2 EXPORT_OK
 
 Functions C<fork_now>, C<waitpids>, C<run_back>, C<run_back_now>,
-C<all_exit_ok> and C<running_now> can be imported. Tag C<:all> is
-defined to import all of them.
+C<all_exit_ok>, C<running_now>, C<system_back> and C<system_back_now>
+can be imported. Tag C<:all> is defined to import all of them.
 
 =head2 FUNCTIONS
 
@@ -464,7 +488,7 @@ To clear it use C<Proc::Queue::delay(0)>.
 =item fork_now()
 
 Sometimes you would need to fork a new child without waiting for other
-child to exit if the queue is full, C<fork_now> does that. It is
+childs to exit if the queue is full, C<fork_now> does that. It is
 exportable so you can do...
 
   use Proc::Queue size => 5, qw(fork_now), debug =>1;
@@ -488,6 +512,17 @@ pid number for the new process.
 =item run_back_now(\&code), run_back_now { code }
 
 A mix between run_back and fork_now.
+
+=item system_back(@command)
+
+Similar to the C<system> call but runs the command in the background
+and waits for some childs to exit first if there are already too many
+childs running.
+
+=item system_back_now(@command)
+
+As C<system_back> but without checking if the maximun number of childs
+allowed has been reached.
 
 =item all_exit_ok(@pid)
 
@@ -517,7 +552,7 @@ function name to be imported.
 
 =head2 BUGS
 
-None that I know, but this is just version 0.08!
+None that I know, but this is just version 0.09!
 
 The module has only been tested under Solaris 2.6
 

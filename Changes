@@ -1,6 +1,8 @@
 Revision history for Perl extension Proc::Queue (formely Fork::Queue).
 
 
+0.09 Added system_back and system_back_now functions
+
 0.08 Added delay functionality
 
 0.07 Corrected another silly bug caused for the module name change in
