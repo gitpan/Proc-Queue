@@ -2,7 +2,7 @@ package Proc::Queue;
 
 require 5.005;
 
-our $VERSION = '1.14_01';
+our $VERSION = '1.15';
 
 use strict;
 # use warnings;

@@ -5,4 +5,4 @@ Makefile.PL
 Queue.pm
 test.pl
 example.pl
-META.yml                                Module meta-data (added by MakeMaker)
+META.yml                                 Module meta-data (added by MakeMaker)

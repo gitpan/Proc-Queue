@@ -1,5 +1,9 @@
 Revision history for Perl extension Proc::Queue
 
+1.15   18 Oct 2003
+	- package released as stable again as nobody has reported bugs
+	  and reports from CPAN testers are all ok.
+
 1.14_01 4 Oct 2003
 	- added support for Win32! (experimental).
 	- added support for ignored_childs mode
