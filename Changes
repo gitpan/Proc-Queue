@@ -1,5 +1,10 @@
 Revision history for Perl extension Proc::Queue
 
+1.14_01 4 Oct 2003
+	- added support for Win32! (experimental).
+	- added support for ignored_childs mode
+	- mode subs rewritten
+
 1.13  23 Jul 2003
 	- docs about ripping childs in long running programs
 	- several typos corrected in the docs
