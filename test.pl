@@ -10,7 +10,7 @@ BEGIN { $| = 1; print "1..1\n"; }
 END {print "not ok 1\n" unless $loaded;}
 
 use constant SIZE => 3;
-use Fork::Queue size => SIZE, ':all';
+use Proc::Queue size => SIZE, ':all';
 
 $loaded = 1;
 print "ok 1\n";
@@ -36,6 +36,7 @@ print $ok ? "ok 2\n" : "not ok 2\n";
 # a race condition and could fail, but it would mean that your machine
 # is not able to fork at least 3 processes in 2 seconds so upgrade
 # now!
+
 $ok=0;
 foreach (1..10) {
   my $f=fork_now;

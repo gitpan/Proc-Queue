@@ -1,6 +1,9 @@
 Revision history for Perl extension Proc::Queue (formely Fork::Queue).
 
 
+0.07 Corrected another silly bug caused for the module name change in
+     the test script
+
 0.06 Corrected bug in Makefile.PL that caused the module to install as
      Fork::Queue
 
