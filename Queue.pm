@@ -22,7 +22,7 @@ our %EXPORT_TAGS = ( all => [ qw( fork_now
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw();
 
-our $VERSION = '1.11';
+our $VERSION = '1.12';
 
 # parameters
 my $queue_size=4; # max number of councurrent processes running.
@@ -373,8 +373,7 @@ __END__
 
 =head1 NAME
 
-Proc::Queue - Perl extension to limit the number of concurrent child
-process running
+Proc::Queue - limit the number of child processes running
 
 =head1 SYNOPSIS
 
@@ -421,7 +420,7 @@ process running
 
 This module lets you parallelise a perl program using the C<fork>,
 C<exit>, C<wait> and C<waitpid> calls as usual and without the need to
-take care of creating too many processes that could overload the
+take care of not creating too many processes that could overload the
 machine.
 
 It redefines perl C<fork>, C<exit>, C<wait> and C<waitpid> core
@@ -429,25 +428,32 @@ functions. Old programs do not need to be modified, only the C<use
 Proc::Queue> sentence is needed.
 
 Additionally, the module have two debugging modes (debug and trace)
-that seem too be very useful when developing parallel aplications.
+that seem too be very useful when developing parallel aplications:
 
-Debug mode when activated dumps lots of information about processes
-being created, exiting, being caught be parent, etc.
+=over 4
 
-Trace mode just prints a line every time one of the C<fork>, C<exit>,
-C<wait> or C<waitpid> functions is called.
+=item debug mode:
+
+when active dumps lots of information about processes being created,
+exiting, being caught be parent, etc.
+
+=item trace mode:
+
+just prints a line every time one of the C<fork>, C<exit>, C<wait> or
+C<waitpid> functions is called.
+
+=back
 
 It is also possible to set a minimun delay time between calls to fork
 to stop consecutive processes for starting in a short time interval.
 
-Child processes continue to use the modified functions, but its queues
-are reset and the maximun process number for them is set to 1 (childs
-can change its proccess queue size themselves later).
+Child processes continue to use the modified functions, but their
+queues are reset and the maximun process number for them is set to 1
+(childs can change their proccess queue size themselves later).
 
 Proc::Queue doesn't work if CHLD signal handler is set to
 C<IGNORE>. You have to call C<wait> or C<waitpid> to get rid of zombie
 processes even if you are not interested in their exit status.
-
 
 =head2 EXPORT
 
@@ -478,19 +484,25 @@ If no argument is given, the number of processes allowed is returned.
 =item delay(), delay($time)
 
 delay lets you set a minimun time in seconds to elapse between every
-consecutive calls to fork. This is usefull for not creating to much
-processes in a very short time.
+consecutive calls to fork. This is usefull for not creating too many
+processes in a short time.
 
-If the Time::HiRes module is available it will be used and delays
-shorted that 1 second could be used.
+If Time::HiRes module is available it is used and delays shorted that
+1 second are allowed.
 
 If no arg is given, the current delay is returned.
 
 To clear it use C<Proc::Queue::delay(0)>.
 
+=item debug(), debug($boolean), trace(), trace($boolean)
+
+Change or return the status for the debug and trace modes.
+
 =back
 
+
 Other utility subroutines that can be imported from Proc::Queue are:
+
 
 =over 4
 
@@ -540,10 +552,6 @@ Do a C<waitpids> call and test that all the processes exit with code 0.
 =item running_now()
 
 Returns the number of child processes currently running.
-
-=item debug(), debug($boolean), trace(), trace($boolean)
-
-Change or return the status for the debug and trace modes.
 
 =item import(pkg,opt,val,opt,val,...,fnt_name,fnt_name,...)
 

@@ -1,5 +1,7 @@
 Revision history for Perl extension Proc::Queue
 
+1.12  8 May 2003
+	- some typos corrected in the docs
 
 1.11  6 May 2003
 	- version bumped to 1.xx to denote stability
