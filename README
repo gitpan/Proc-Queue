@@ -23,6 +23,8 @@ SYNOPSIS
       Proc::Queue::size(10); # changing limit to 10 concurrent processes
       Proc::Queue::trace(1); # trace mode on
       Proc::Queue::debug(0); # debug is off
+      Proc::Queue::delay(0.2); # set 200 miliseconds as minimum
+                               # delay between fork calls
 
       package other; # just to test it works in any package
 
@@ -60,9 +62,12 @@ DESCRIPTION
     Trace mode just prints a line every time one of the `fork', `exit',
     `wait' or `waitpid' functions is called.
 
+    It is also possible to set a minimun delay time between calls to fork to
+    stop consecutive processes for starting in a short time interval.
+
     Childs processes continue to use the modified functions, but its queues
     are reset and the maximun process number for them is set to 1. Althought
-    child can change it to any other value if needed.
+    childs can change it to any other value if needed.
 
   EXPORT
 
@@ -86,6 +91,18 @@ DESCRIPTION
 
         If no argument is given, the number of processes allowed is
         returned.
+
+    delay(), delay($time)
+        delay lets you set a minimun time in seconds to elapse between every
+        consecutive calls to fork. This is usefull for not creating to much
+        processes in a very short time.
+
+        If the Time::HiRes module is available it will be used and delays
+        shorted that 1 second could be used.
+
+        If no arg is given, the current delay is returned.
+
+        To clear it use `Proc::Queue::delay(0)'.
 
     fork_now()
         Sometimes you would need to fork a new child without waiting for
@@ -121,7 +138,7 @@ DESCRIPTION
         Change or return the status for the debug and trace modes.
 
     import(pkg,opt,val,opt,val,...,fnt_name,fnt_name,...)
-        The import functions is not usually explicitally called but by the
+        The import function is not usually explicitally called but by the
         `use Proc::Queue' statement. The options allowed are `size', `debug'
         and `trace' and they let you configure the module instead of using
         the `size', `debug' or `trace' module functions as in...
@@ -135,7 +152,7 @@ DESCRIPTION
 
   BUGS
 
-        None that I know, but this is just version 0.07!
+        None that I know, but this is just version 0.08!
 
         The module has only been tested under Solaris 2.6
 
@@ -156,6 +173,7 @@ AUTHOR
 
 SEE ALSO
         the perlfunc(1) manpage, the perlipc(1) manpage, the POSIX manpage,
-        the perlfork(1) manpage, the Parallel::ForkManager manpage. The
-        `example.pl' script contained in the module distribution.
+        the perlfork(1) manpage, the Time::HiRes manpage, the
+        Parallel::ForkManager manpage. The `example.pl' script contained in
+        the module distribution.
 

@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-use Proc::Queue size => 4, debug => 1, trace => 1, ':all';
+use Proc::Queue size => 4, debug => 1, trace => 1, delay => 0.3, ':all';
 
 foreach (1..10) {
   my $f=fork;
@@ -17,7 +17,7 @@ foreach (1..10) {
 Proc::Queue::size(10); # changing limit to 10 concurrent processes
 Proc::Queue::trace(1); # trace mode on
 Proc::Queue::debug(0); # debug is off
-
+Proc::Queue::delay(0); # no delay between fork calls
 
 package other; # just to test it works in any package
 

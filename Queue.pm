@@ -20,12 +20,15 @@ our %EXPORT_TAGS = ( all => [ qw( fork_now
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw();
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 # parameters
-my $queue_size=4;
-my $debug=0;
-my $trace=0;
+my $queue_size=4; # max number of councurrent processes running.
+my $debug=0; # shows debug info.
+my $trace=0; # shows function enters.
+my $delay=0; # delay between fork calls.
+
+my $last=0; # last time fork was called.
 
 # module status
 my $queue_now=0;
@@ -43,7 +46,8 @@ sub import {
     my $o=$opts[$i];
     if( $o eq 'size'
         or $o eq 'debug'
-        or $o eq 'trace' ) {
+        or $o eq 'trace'
+	or $o eq 'delay' ) {
       $#opts>$i or croak "option '$o' needs a value";
       my $value=$opts[$i+1];
       { no strict qw( subs refs );
@@ -54,6 +58,16 @@ sub import {
   carp "Exporting '".join("', '",@opts)."' symbols from Proc::Queue" if $debug;
   @_=($pkg,@opts);
   goto &Exporter::import;
+}
+
+sub delay {
+  my $d=shift;
+  my $old_delay=$delay;
+  if(defined $d) {
+    $delay=$d;
+    carp "Proc queue delay set to $delay sec., it was $old_delay" if $debug;
+  }
+  return $old_delay;
 }
 
 sub size {
@@ -186,8 +200,20 @@ sub new_exit (;$ ) {
   return CORE::exit($e);
 }
 
+
+# use Time::Hires::time if available;
+BEGIN { eval "use Time::HiRes 'time'" }
+
 sub _fork () {
   carp "Proc::Queue::_fork called" if $trace && $debug;
+  if ($delay>0) {
+    my $wait=$last+$delay - time();
+    if ($wait>0) {
+      carp "Delaying $wait seconds before forking" if $debug;
+      select (undef,undef,undef,$wait);
+    }
+    $last=time;
+  }
   my $f=CORE::fork;
   if (defined($f)) {
     if($f == 0) {
@@ -349,7 +375,8 @@ process running
   Proc::Queue::size(10); # changing limit to 10 concurrent processes
   Proc::Queue::trace(1); # trace mode on
   Proc::Queue::debug(0); # debug is off
-
+  Proc::Queue::delay(0.2); # set 200 miliseconds as minimum
+                           # delay between fork calls
 
   package other; # just to test it works in any package
 
@@ -388,9 +415,12 @@ being created, exiting, being caught be parent, etc.
 Trace mode just prints a line every time one of the C<fork>, C<exit>,
 C<wait> or C<waitpid> functions is called.
 
+It is also possible to set a minimun delay time between calls to fork
+to stop consecutive processes for starting in a short time interval.
+
 Childs processes continue to use the modified functions, but its
 queues are reset and the maximun process number for them is set to
-1. Althought child can change it to any other value if needed.
+1. Althought childs can change it to any other value if needed.
 
 =head2 EXPORT
 
@@ -417,6 +447,19 @@ set to it and the number of maximun processes that were allowed before
 is returned.
 
 If no argument is given, the number of processes allowed is returned.
+
+=item delay(), delay($time)
+
+delay lets you set a minimun time in seconds to elapse between every
+consecutive calls to fork. This is usefull for not creating to much
+processes in a very short time.
+
+If the Time::HiRes module is available it will be used and delays
+shorted that 1 second could be used.
+
+If no arg is given, the current delay is returned.
+
+To clear it use C<Proc::Queue::delay(0)>.
 
 =item fork_now()
 
@@ -460,7 +503,7 @@ Change or return the status for the debug and trace modes.
 
 =item import(pkg,opt,val,opt,val,...,fnt_name,fnt_name,...)
 
-The import functions is not usually explicitally called but by the
+The import function is not usually explicitally called but by the
 C<use Proc::Queue> statement. The options allowed are C<size>, C<debug>
 and C<trace> and they let you configure the module instead of using
 the C<size>, C<debug> or C<trace> module functions as in...
@@ -474,7 +517,7 @@ function name to be imported.
 
 =head2 BUGS
 
-None that I know, but this is just version 0.07!
+None that I know, but this is just version 0.08!
 
 The module has only been tested under Solaris 2.6
 
@@ -498,7 +541,7 @@ Salvador Fandino <sfandino@yahoo.com>
 =head1 SEE ALSO
 
 L<perlfunc(1)>, L<perlipc(1)>, L<POSIX>, L<perlfork(1)>,
-L<Parallel::ForkManager>. The C<example.pl> script contained in the
-module distribution.
+L<Time::HiRes>, L<Parallel::ForkManager>. The C<example.pl> script
+contained in the module distribution.
 
 =cut
