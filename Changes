@@ -1,5 +1,9 @@
 Revision history for Perl extension Proc::Queue
 
+1.13  23 Jul 2003
+	- docs about ripping childs in long running programs
+	- several typos corrected in the docs
+
 1.12  8 May 2003
 	- some typos corrected in the docs
 

@@ -22,7 +22,7 @@ our %EXPORT_TAGS = ( all => [ qw( fork_now
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw();
 
-our $VERSION = '1.12';
+our $VERSION = '1.13';
 
 # parameters
 my $queue_size=4; # max number of councurrent processes running.
@@ -367,6 +367,7 @@ sub running_now () {
 
 
 1;
+
 __END__
 
 # docs:
@@ -380,10 +381,11 @@ Proc::Queue - limit the number of child processes running
   use Proc::Queue size => 4, debug => 1;
 
   package other;
+  use POSIX ":sys_wait_h"; # imports WNOHANG
 
   # this loop creates new childs, but Proc::Queue makes it wait every
   # time the limit (4) is reached until enough childs exit
-  foreach (1..10) {
+  foreach (1..100) {
     my $f=fork;
     if(defined ($f) and $f==0) {
       print "-- I'm a forked process $$\n";
@@ -391,6 +393,7 @@ Proc::Queue - limit the number of child processes running
       print "-- I'm tired, going away $$\n";
       exit(0)
     }
+    1 while waitpid(-1, WNOHANG)>0; # reaps childs
   }
 
   Proc::Queue::size(10); # changing limit to 10 concurrent processes
@@ -399,7 +402,7 @@ Proc::Queue - limit the number of child processes running
   Proc::Queue::delay(0.2); # set 200 miliseconds as minimum
                            # delay between fork calls
 
-  package other; # just to test it works in any package
+  package other; # just to test it works on any package
 
   print "going again!\n";
 
@@ -419,41 +422,44 @@ Proc::Queue - limit the number of child processes running
 =head1 DESCRIPTION
 
 This module lets you parallelise a perl program using the C<fork>,
-C<exit>, C<wait> and C<waitpid> calls as usual and without the need to
-take care of not creating too many processes that could overload the
-machine.
+C<exit>, C<wait> and C<waitpid> calls as usual but without taking care
+of creating too many processes and overloading the machine.
 
 It redefines perl C<fork>, C<exit>, C<wait> and C<waitpid> core
-functions. Old programs do not need to be modified, only the C<use
-Proc::Queue> sentence is needed.
+functions. Old programs do not need to be reprogrammed, only the C<use
+Proc::Queue ...> sentence has to be added to them.
 
-Additionally, the module have two debugging modes (debug and trace)
+Additionally, the module has two debugging modes (debug and trace)
 that seem too be very useful when developing parallel aplications:
 
 =over 4
 
 =item debug mode:
 
-when active dumps lots of information about processes being created,
+when active, dumps lots of information about processes being created,
 exiting, being caught be parent, etc.
 
 =item trace mode:
 
-just prints a line every time one of the C<fork>, C<exit>, C<wait> or
-C<waitpid> functions is called.
+prints a line every time one of the C<fork>, C<exit>, C<wait> or
+C<waitpid> functions are called.
 
 =back
 
-It is also possible to set a minimun delay time between calls to fork
-to stop consecutive processes for starting in a short time interval.
+It is also possible to set a minimun delay time between fork calls
+to stop too many processes for starting in a short time interval.
 
 Child processes continue to use the modified functions, but their
 queues are reset and the maximun process number for them is set to 1
-(childs can change their proccess queue size themselves later).
+(anyway, childs can change their queue size themselves).
 
 Proc::Queue doesn't work if CHLD signal handler is set to
-C<IGNORE>. You have to call C<wait> or C<waitpid> to get rid of zombie
-processes even if you are not interested in their exit status.
+C<IGNORE>.
+
+Internally, Proc::Queue, automatically catches zombies and stores
+their exit status in a private hash. To avoid leaking memory in long
+running programs you have to call C<wait> or C<waitpid> to delete
+entries from that hash.
 
 =head2 EXPORT
 
@@ -483,12 +489,12 @@ If no argument is given, the number of processes allowed is returned.
 
 =item delay(), delay($time)
 
-delay lets you set a minimun time in seconds to elapse between every
-consecutive calls to fork. This is usefull for not creating too many
-processes in a short time.
+lets you set a minimun time in seconds to elapse between consecutive
+calls to fork. It is useful to avoid creating too many processes in
+a short time (that could degrade performance).
 
-If Time::HiRes module is available it is used and delays shorted that
-1 second are allowed.
+If Time::HiRes module is available delays shorted that 1 second are
+allowed.
 
 If no arg is given, the current delay is returned.
 
@@ -521,8 +527,8 @@ exportable so you can do...
 
 =item waitpids(@pid)
 
-Will wait for all the processes in @pid to exit. It returns an array
-with pairs pid and exit values (pid1, exit1, pid2, exit2, pid3,
+waits for all the processes in @pid to exit. It returns an array
+with pairs of pid and exit values (pid1, exit1, pid2, exit2, pid3,
 exit3,...) as returned by individual waitpid calls.
 
 =item run_back(\&code), run_back { code }
@@ -537,8 +543,8 @@ A mix between run_back and fork_now.
 =item system_back(@command)
 
 Similar to the C<system> call but runs the command in the background
-and waits for some childs to exit first if there are already too many
-childs running.
+and waits for other childs to exit first if there are already too many
+running.
 
 =item system_back_now(@command)
 
@@ -556,9 +562,9 @@ Returns the number of child processes currently running.
 =item import(pkg,opt,val,opt,val,...,fnt_name,fnt_name,...)
 
 The import function is not usually explicitally called but by the
-C<use Proc::Queue> statement. The options allowed are C<size>, C<debug>
-and C<trace> and they let you configure the module instead of using
-the C<size>, C<debug> or C<trace> module functions as in...
+C<use Proc::Queue> statement.
+
+Options allowed are C<size>, C<debug> and C<trace>, i.e:
 
   use Proc::Queue size=>10, debug=>1;
 
@@ -570,11 +576,8 @@ function name to be imported.
 
 =head2 BUGS
 
-Proc::Queue is a very stable module, and no bugs have been reported in
-a long time.
-
-Child (forking) behaviour althought deterministic could be changed to
-something better. I would accept any suggestions on it.
+Proc::Queue is a very stable module, and no bugs have been reported
+for a long time.
 
 
 =head1 SEE ALSO
