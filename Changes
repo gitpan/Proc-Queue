@@ -1,28 +1,53 @@
-Revision history for Perl extension Proc::Queue (formely Fork::Queue).
+Revision history for Perl extension Proc::Queue
 
 
-0.09 Added system_back and system_back_now functions
+1.11  6 May 2003
+	- version bumped to 1.xx to denote stability
+	- do not ignore CHLD signal documented
+	- rewritten README file
 
-0.08 Added delay functionality
 
-0.07 Corrected another silly bug caused for the module name change in
-     the test.pl script
+0.10  19 Nov 2001
+	- correct some warnings when on debug or trace mode
 
-0.06 Corrected bug in Makefile.PL that caused the module to install as
-     Fork::Queue
 
-0.05 Module name changed to Proc::Queue from Fork::Queue
+0.09  3 Oct 2001
+	- Added system_back and system_back_now functions
 
-0.04 Corrected bug that replace waitpid with an unexistant function
 
-0.03 New set of high level functions added
+0.08
+	- Added delay functionality
 
-0.02 Added README file automatically generated from embedded pod
-     documentation.
 
-     Added fork_now function
+0.07
+	- Corrected another silly bug caused for the module name change
+	  in the test.pl script
 
-     Exporter stuff integrated
+
+0.06
+	- Corrected bug in Makefile.PL that caused the module to
+	  install as Fork::Queue
+
+
+0.05
+	- Module name changed to Proc::Queue from Fork::Queue
+
+
+0.04
+	- Corrected bug that replace waitpid with an unexistant function
+
+
+0.03
+	- New set of high level functions added
+
+
+0.02
+	- Added README file automatically generated from embedded pod
+     	  documentation.
+
+	- Added fork_now function
+
+	- Exporter stuff integrated
 
 
 0.01  Wed Mar 14 21:57:34 2001

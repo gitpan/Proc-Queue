@@ -1,188 +1,29 @@
-NAME
-    Proc::Queue - Perl extension to limit the number of concurrent child
-    process running
+Proc/Queue
+==========
 
-SYNOPSIS
-      use Proc::Queue size => 4, debug => 1;
+Proc::Queue limits the number of forked processes that can
+be running concurrently.
 
-      package other;
 
-      # this loop will create new childs, but Proc::Queue will make it
-      # wait when the limit (4) is reached until some of the old childs
-      # exit.
-      foreach (1..10) {
-        my $f=fork;
-        if(defined ($f) and $f==0) {
-          print "-- I'm a forked process $$\n";
-          sleep rand 5;
-          print "-- I'm tired, going away $$\n";
-          exit(0)
-        }
-      }
+INSTALLATION
 
-      Proc::Queue::size(10); # changing limit to 10 concurrent processes
-      Proc::Queue::trace(1); # trace mode on
-      Proc::Queue::debug(0); # debug is off
-      Proc::Queue::delay(0.2); # set 200 miliseconds as minimum
-                               # delay between fork calls
+To install this module type the following:
 
-      package other; # just to test it works in any package
+   perl Makefile.PL
+   make
+   make test
+   make install
 
-      print "going again!\n";
 
-      # another loop with different settings for Proc::Queue
-      foreach (1..20) {
-        my $f=fork;
-        if(defined ($f) and $f==0) {
-          print "-- I'm a forked process $$\n";
-          sleep rand 5;
-          print "-- I'm tired, going away $$\n";
-          exit(0)
-        }
-      }
+DEPENDENCIES
 
-      1 while wait != -1;
+   Time::Hires will be used if available.
 
-DESCRIPTION
-    This module lets you parallelice a perl program using the `fork',
-    `exit', `wait' and `waitpid' calls as usual and without the need to take
-    care of creating too much processes and overloading the machine.
 
-    It works redefining `fork', `exit', `wait' and `waitpid' functions so
-    old programs do not have to be modified to use this module (only the
-    `use Proc::Queue' sentence is needed).
+COPYRIGHT AND LICENCE
 
-    Additionally, the module have two debugging modes (debug and trace) that
-    can be activated and that seem too be very useful when developing
-    parallel aplications.
+Copyright (C) 2001, 2002, 2003 Salvador Fandiño García
 
-    Debug mode when activated dumps lots of information about processes
-    being created, exiting, being caught be parent, etc.
-
-    Trace mode just prints a line every time one of the `fork', `exit',
-    `wait' or `waitpid' functions is called.
-
-    It is also possible to set a minimun delay time between calls to fork to
-    stop consecutive processes for starting in a short time interval.
-
-    Childs processes continue to use the modified functions, but its queues
-    are reset and the maximun process number for them is set to 1. Althought
-    childs can change it to any other value if needed.
-
-  EXPORT
-
-    This module redefines the `fork', `wait', `waitpid' and `exit' calls.
-
-  EXPORT_OK
-
-    Functions `fork_now', `waitpids', `run_back', `run_back_now',
-    `all_exit_ok', `running_now', `system_back' and `system_back_now' can be
-    imported. Tag `:all' is defined to import all of them.
-
-  FUNCTIONS
-
-    There are several not exported functions that can be used to configure
-    the module:
-
-    size(), size($number)
-        If an argument is given the maximun number of concurrent processes
-        is set to it and the number of maximun processes that were allowed
-        before is returned.
-
-        If no argument is given, the number of processes allowed is
-        returned.
-
-    delay(), delay($time)
-        delay lets you set a minimun time in seconds to elapse between every
-        consecutive calls to fork. This is usefull for not creating to much
-        processes in a very short time.
-
-        If the Time::HiRes module is available it will be used and delays
-        shorted that 1 second could be used.
-
-        If no arg is given, the current delay is returned.
-
-        To clear it use `Proc::Queue::delay(0)'.
-
-    fork_now()
-        Sometimes you would need to fork a new child without waiting for
-        other childs to exit if the queue is full, `fork_now' does that. It
-        is exportable so you can do...
-
-          use Proc::Queue size => 5, qw(fork_now), debug =>1;
-
-          $f=fork_now;
-          if(defined $f and $f == 0) {
-              print "I'm the child\n"; exit;
-          }
-
-    waitpids(@pid)
-        Will wait for all the processes in @pid to exit. It returns an array
-        with pairs pid and exit values (pid1, exit1, pid2, exit2, pid3,
-        exit3,...) as returned by individual waitpid calls.
-
-    run_back(\&code), run_back { code }
-        Runs the argument subrutine in a forked child process and returns
-        the pid number for the new process.
-
-    run_back_now(\&code), run_back_now { code }
-        A mix between run_back and fork_now.
-
-    system_back(@command)
-        Similar to the `system' call but runs the command in the background
-        and waits for some childs to exit first if there are already too
-        many childs running.
-
-    system_back_now(@command)
-        As `system_back' but without checking if the maximun number of
-        childs allowed has been reached.
-
-    all_exit_ok(@pid)
-        Do a waitpids call and test that all the processes exit with code 0.
-
-    running_now()
-        Returns the number of child processes currently running.
-
-    debug(), debug($boolean), trace(), trace($boolean)
-        Change or return the status for the debug and trace modes.
-
-    import(pkg,opt,val,opt,val,...,fnt_name,fnt_name,...)
-        The import function is not usually explicitally called but by the
-        `use Proc::Queue' statement. The options allowed are `size', `debug'
-        and `trace' and they let you configure the module instead of using
-        the `size', `debug' or `trace' module functions as in...
-
-          use Proc::Queue size=>10, debug=>1;
-
-        Anything that is not `size', `debug' or `trace' is expected to be a
-        function name to be imported.
-
-          use Proc::Queue size=>10, ':all';
-
-  BUGS
-
-        None that I know, but this is just version 0.10!
-
-        The module has only been tested under Solaris 2.6
-
-        Child (forking) behaviour althought deterministic could be changed
-        to something better. I would accept any suggestions on it.
-
-INSTALL
-        As usual, unpack de module distribution and from the newly created
-        directory run:
-
-          $ perl Makefile.PL
-          $ make
-          $ make test
-          $ make install
-
-AUTHOR
-        Salvador Fandino <sfandino@yahoo.com>
-
-SEE ALSO
-        the perlfunc(1) manpage, the perlipc(1) manpage, the POSIX manpage,
-        the perlfork(1) manpage, the Time::HiRes manpage, the
-        Parallel::ForkManager manpage. The `example.pl' script contained in
-        the module distribution.
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself. 
 

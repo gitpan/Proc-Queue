@@ -1,6 +1,6 @@
 package Proc::Queue;
 
-require 5.005_62;
+require 5.005;
 use strict;
 # use warnings;
 require Exporter;
@@ -11,18 +11,18 @@ use POSIX ":sys_wait_h";
 our @ISA = qw(Exporter);
 
 our %EXPORT_TAGS = ( all => [ qw( fork_now
-				  waitpids
-				  run_back
-				  run_back_now
-				  system_back
-				  system_back_now
-				  all_exit_ok
-				  running_now ) ] );
+				    waitpids
+				    run_back
+				    run_back_now
+				    system_back
+				    system_back_now
+				    all_exit_ok
+				    running_now ) ] );
 
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw();
 
-our $VERSION = '0.10';
+our $VERSION = '1.11';
 
 # parameters
 my $queue_size=4; # max number of councurrent processes running.
@@ -382,9 +382,8 @@ process running
 
   package other;
 
-  # this loop will create new childs, but Proc::Queue will make it
-  # wait when the limit (4) is reached until some of the old childs
-  # exit.
+  # this loop creates new childs, but Proc::Queue makes it wait every
+  # time the limit (4) is reached until enough childs exit
   foreach (1..10) {
     my $f=fork;
     if(defined ($f) and $f==0) {
@@ -420,17 +419,17 @@ process running
 
 =head1 DESCRIPTION
 
-This module lets you parallelice a perl program using the C<fork>,
+This module lets you parallelise a perl program using the C<fork>,
 C<exit>, C<wait> and C<waitpid> calls as usual and without the need to
-take care of creating too much processes and overloading the machine.
+take care of creating too many processes that could overload the
+machine.
 
-It works redefining C<fork>, C<exit>, C<wait> and C<waitpid> functions
-so old programs do not have to be modified to use this module (only
-the C<use Proc::Queue> sentence is needed).
+It redefines perl C<fork>, C<exit>, C<wait> and C<waitpid> core
+functions. Old programs do not need to be modified, only the C<use
+Proc::Queue> sentence is needed.
 
 Additionally, the module have two debugging modes (debug and trace)
-that can be activated and that seem too be very useful when developing
-parallel aplications.
+that seem too be very useful when developing parallel aplications.
 
 Debug mode when activated dumps lots of information about processes
 being created, exiting, being caught be parent, etc.
@@ -441,9 +440,14 @@ C<wait> or C<waitpid> functions is called.
 It is also possible to set a minimun delay time between calls to fork
 to stop consecutive processes for starting in a short time interval.
 
-Childs processes continue to use the modified functions, but its
-queues are reset and the maximun process number for them is set to
-1. Althought childs can change it to any other value if needed.
+Child processes continue to use the modified functions, but its queues
+are reset and the maximun process number for them is set to 1 (childs
+can change its proccess queue size themselves later).
+
+Proc::Queue doesn't work if CHLD signal handler is set to
+C<IGNORE>. You have to call C<wait> or C<waitpid> to get rid of zombie
+processes even if you are not interested in their exit status.
+
 
 =head2 EXPORT
 
@@ -483,6 +487,12 @@ shorted that 1 second could be used.
 If no arg is given, the current delay is returned.
 
 To clear it use C<Proc::Queue::delay(0)>.
+
+=back
+
+Other utility subroutines that can be imported from Proc::Queue are:
+
+=over 4
 
 =item fork_now()
 
@@ -525,7 +535,7 @@ allowed has been reached.
 
 =item all_exit_ok(@pid)
 
-Do a waitpids call and test that all the processes exit with code 0.
+Do a C<waitpids> call and test that all the processes exit with code 0.
 
 =item running_now()
 
@@ -549,33 +559,33 @@ function name to be imported.
 
   use Proc::Queue size=>10, ':all';
 
+
 =head2 BUGS
 
-None that I know, but this is just version 0.10!
-
-The module has only been tested under Solaris 2.6
+Proc::Queue is a very stable module, and no bugs have been reported in
+a long time.
 
 Child (forking) behaviour althought deterministic could be changed to
 something better. I would accept any suggestions on it.
 
-=head1 INSTALL
-
-As usual, unpack de module distribution and from the newly created
-directory run:
-
-  $ perl Makefile.PL
-  $ make
-  $ make test
-  $ make install
-
-=head1 AUTHOR
-
-Salvador Fandino <sfandino@yahoo.com>
 
 =head1 SEE ALSO
 
 L<perlfunc(1)>, L<perlipc(1)>, L<POSIX>, L<perlfork(1)>,
 L<Time::HiRes>, L<Parallel::ForkManager>. The C<example.pl> script
 contained in the module distribution.
+
+
+=head1 AUTHOR
+
+Salvador Fandiño <sfandino@yahoo.com>
+
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2001, 2002, 2003 by Salvador Fandiño
+
+This library is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
 
 =cut
