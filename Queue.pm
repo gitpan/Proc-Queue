@@ -2,7 +2,7 @@ package Proc::Queue;
 
 require 5.005_62;
 use strict;
-use warnings;
+# use warnings;
 require Exporter;
 use Carp;
 
@@ -22,7 +22,7 @@ our %EXPORT_TAGS = ( all => [ qw( fork_now
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw();
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 # parameters
 my $queue_size=4; # max number of councurrent processes running.
@@ -196,12 +196,11 @@ sub new_waitpid ($$) {
 }
 
 sub new_exit (;$ ) {
-  my $e=shift;
-  carp "Proc::Queue::exit($e) called" if $trace;
-  carp "Process $$ exiting with value $e" if $debug;
+  my $e=@_?shift:0;
+  carp "Proc::Queue::exit(".(defined($e)?$e:'undef').") called" if $trace;
+  carp "Process $$ exiting with value ".(defined($e)?$e:'undef') if $debug;
   return CORE::exit($e);
 }
-
 
 # use Time::Hires::time if available;
 BEGIN { eval "use Time::HiRes 'time'" }
@@ -552,7 +551,7 @@ function name to be imported.
 
 =head2 BUGS
 
-None that I know, but this is just version 0.09!
+None that I know, but this is just version 0.10!
 
 The module has only been tested under Solaris 2.6
 
