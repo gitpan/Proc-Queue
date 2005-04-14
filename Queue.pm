@@ -2,7 +2,7 @@ package Proc::Queue;
 
 require 5.005;
 
-our $VERSION = '1.15';
+our $VERSION = '1.16';
 
 use strict;
 # use warnings;
@@ -12,6 +12,7 @@ use POSIX ":sys_wait_h";
 
 our @ISA = qw(Exporter);
 our %EXPORT_TAGS = ( all => [ qw( fork_now
+				  weight
 				  waitpids
 				  run_back
 				  run_back_now
@@ -31,6 +32,7 @@ my $debug=0; # shows debug info.
 my $trace=0; # shows function calls.
 my $delay=0; # delay between fork calls.
 my $ignore_childs=0; # similar to $SIG{CHILD}='IGNORE';
+my $weight=1;
 
 my $last=0; # last time fork was called.
 
@@ -52,6 +54,7 @@ sub import {
         or $o eq 'debug'
         or $o eq 'trace'
 	or $o eq 'delay'
+	or $o eq 'weight'
 	or $o eq 'ignore_childs') {
       $#opts>$i or croak "option '$o' needs a value";
       my $value=$opts[$i+1];
@@ -70,7 +73,7 @@ sub delay {
   my $old_delay=$delay;
   $delay=$_[0];
   carp "Proc queue delay set to ${delay}s, it was $old_delay" if $debug;
-  return $old_delay;
+  $old_delay;
 }
 
 sub size {
@@ -81,7 +84,16 @@ sub size {
     unless $size >= 1;
   $queue_size=$size;
   carp "Proc queue size set to $size, it was $old_size" if $debug;
-  return $old_size;
+  $old_size;
+}
+
+sub weight {
+  return $weight unless @_;
+  my $old_weight=$weight;
+  croak "invalid value for Proc::Queue weight ($_[0]), min value is 1"
+    unless int($_[0])>=1;
+  $weight=int($_[0]);
+  $old_weight;
 }
 
 sub debug {
@@ -139,8 +151,7 @@ sub _wait () {
   my $w=CORE::wait;
   if ($w != -1) {
     if(exists $process{$w}) {
-      delete $process{$w};
-      $queue_now--;
+      $queue_now -= delete($process{$w});
       carp "Process $w has exited, $queue_now processes running now" if $debug;
     }
     else {
@@ -171,8 +182,7 @@ sub _waitpid ($$) {
   my $w=CORE::waitpid($pid,$flags);
   if ($w != -1) {
     if(exists $process{$w}) {
-      delete $process{$w};
-      $queue_now--;
+      $queue_now -= delete($process{$w});
       carp "Process $w has exited, $queue_now processes running now" if $debug;
     }
     else {
@@ -240,8 +250,8 @@ sub _fork () {
       @captured=();
     }
     else {
-      $process{$f}=1;
-      $queue_now++;
+      $process{$f}=$weight;
+      $queue_now+=$weight;
       carp "Child forked (pid=$f), $queue_now processes running now" if $debug;
     }
   }
@@ -522,6 +532,23 @@ If no arg is given, the current delay is returned.
 
 To clear it use C<Proc::Queue::delay(0)>.
 
+=item weight(), weight($weight)
+
+by default any process forked count as 1 through the max number of
+processes allowed to run simultaneously (the queue size). C<weight>
+allows to change this, i.e.:
+
+  Proc::Queue::weight(3);
+  run_back { ... heavy process here ... };
+  Proc::Queue::weight(1);
+
+causes the C<heavy process> to count as three normal processes.
+
+Valid weight values are integers greater than zero.
+
+Remember to reset the weight back to 1 (or whatever) after the heavier
+processes have been forked!.
+
 =item ignore_childs($on)
 
 calling
@@ -598,12 +625,12 @@ Returns the number of child processes currently running.
 The import function is not usually explicitally called but by the
 C<use Proc::Queue> statement.
 
-Options allowed are C<size>, C<debug> and C<trace>, i.e:
+Options allowed are C<size>, C<debug>, C<weight> and C<trace>, i.e:
 
   use Proc::Queue size=>10, debug=>1;
 
-Anything that is not C<size>, C<debug> or C<trace> is expected to be a
-function name to be imported.
+Anything that is not C<size>, C<debug>, C<weight> or C<trace> is
+expected to be a function name to be imported.
 
   use Proc::Queue size=>10, ':all';
 
@@ -624,12 +651,12 @@ contained in the module distribution.
 
 =head1 AUTHOR
 
-Salvador Fandiño E<lt>sfandino@yahoo.comE<gt>
+Salvador FandiE<ntilde>o E<lt>sfandino@yahoo.comE<gt>
 
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2001, 2002, 2003 by Salvador Fandiño
+Copyright 2001, 2002, 2003, 2005 by Salvador FandiE<ntilde>o
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

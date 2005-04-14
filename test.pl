@@ -17,7 +17,7 @@ print "ok 1\n";
 
 ######################### End of black magic.
 
-print "2..6\n";
+print "2..8\n";
 
 # test that not more than SIZE childs are running at the same time
 $ok=1;
@@ -33,8 +33,8 @@ foreach (1..5) {
 print $ok ? "ok 2\n" : "not ok 2\n";
 
 # test that fork_now ignores SIZE. Theorically this test suffers from
-# a race condition and could fail, but it would mean that your machine
-# is not able to fork at least 3 processes in 2 seconds so upgrade
+# a race condition and could fail, but it would also mean that your machine
+# is not able to fork 3 processes in 2 seconds so upgrade
 # now!
 
 $ok=0;
@@ -85,3 +85,32 @@ if (defined $pid and $pid==0) {
 }
 
 print ($pid==waitpid($pid,0) ? "ok 6\n" : "not ok 6\n" );
+
+#testing weights
+Proc::Queue::size(4);
+Proc::Queue::weight(3);
+# with this parameters at some point there should be 6 (weighted) processes running.
+$ok=0;
+@pids=();
+foreach my $i (1..5) {
+  push @pids, run_back {
+    sleep 1;
+    exit(0)
+  };
+  $ok=1 if running_now == 6;
+}
+$ok&&=all_exit_ok(@pids);
+print $ok ? "ok 7\n" : "not ok 7\n";
+
+# ... but never more
+$ok=1;
+@pids=();
+foreach my $i (1..5) {
+  push @pids, run_back {
+    sleep 1;
+    exit(0)
+  };
+  $ok=0 if running_now > 6;
+}
+$ok&&=all_exit_ok(@pids);
+print $ok ? "ok 8\n" : "not ok 8\n";

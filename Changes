@@ -1,5 +1,8 @@
 Revision history for Perl extension Proc::Queue
 
+1.16   13 Apr 2005
+	- added support for "weigh" factor
+
 1.15   18 Oct 2003
 	- package released as stable again as nobody has reported bugs
 	  and reports from CPAN testers are all ok.
