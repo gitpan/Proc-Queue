@@ -2,13 +2,14 @@ package Proc::Queue;
 
 require 5.005;
 
-our $VERSION = '1.16';
+our $VERSION = '1.17';
 
 use strict;
 # use warnings;
 require Exporter;
 use Carp;
 use POSIX ":sys_wait_h";
+use Errno qw(ENOENT EPERM);
 
 our @ISA = qw(Exporter);
 our %EXPORT_TAGS = ( all => [ qw( fork_now
@@ -344,11 +345,24 @@ sub run_back_now (&) {
 sub _system_back {
   my $now=shift;
   carp "Proc::Queue::_system_back($now, ".join(", ",@_).") called" if $trace and $debug;
+  if (@_ > 1) {
+      unless (-e $_[0]) {
+          carp "command '$_[0]' not found" if $debug;
+          $! = ENOENT;
+          return undef;
+      }
+      unless (-f _ and -x _) {
+          carp "permission to execute command '$_[0]' denied" if $debug;
+          $! = EPERM;
+          return undef;
+      }
+  }
   my $f=$now ? fork_now : new_fork;
   if(defined($f) and $f==0) {
     carp "Running exec(".join(", ",@_).") in forked child $$" if $debug;
     { exec(@_) }
     carp "exec(".join(", ",@_).") failed" if $debug;
+    CORE::exit(255);
   }
   return $f;
 }
@@ -367,7 +381,7 @@ sub all_exit_ok {
   carp "Proc::Queue::all_exit_ok(".join(", ",@_).")" if $trace;
   my @result=waitpids(@_);
   my $i;
-  for($i=0;$i<@result;$i++) {
+  for($i=0; $i<@result; $i++) {
     next unless $i&1;
     if (!defined($result[$i]) or $result[$i]) {
       carp "Child ".$_[$i>>1]." fail with code $result[$i], waitpid return $result[$i-1]" if $debug;
@@ -606,6 +620,9 @@ A mix between run_back and fork_now.
 Similar to the C<system> call but runs the command in the background
 and waits for other childs to exit first if there are already too many
 running.
+
+Returns the pid of the forked process or undef if the program was not
+found.
 
 =item system_back_now(@command)
 
