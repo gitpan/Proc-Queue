@@ -1,8 +1,8 @@
 package Proc::Queue;
 
-require 5.005;
+require 5.006;
 
-our $VERSION = '1.17';
+our $VERSION = '1.18';
 
 use strict;
 # use warnings;
@@ -345,7 +345,7 @@ sub run_back_now (&) {
 sub _system_back {
   my $now=shift;
   carp "Proc::Queue::_system_back($now, ".join(", ",@_).") called" if $trace and $debug;
-  if (@_ > 1) {
+  if (0 and @_ > 1) { # TODO, search command on the PATH
       unless (-e $_[0]) {
           carp "command '$_[0]' not found" if $debug;
           $! = ENOENT;
@@ -362,7 +362,8 @@ sub _system_back {
     carp "Running exec(".join(", ",@_).") in forked child $$" if $debug;
     { exec(@_) }
     carp "exec(".join(", ",@_).") failed" if $debug;
-    CORE::exit(255);
+    require POSIX;
+    POSIX::_exit(255);
   }
   return $f;
 }

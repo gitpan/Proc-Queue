@@ -1,8 +1,12 @@
 Revision history for Perl extension Proc::Queue
 
+1.18  2 Jun 2006
+        - call POSIX::_exit when exec failed inside system_back
+        - remove file checks inside exec as they ignore the PATH
+
 1.17  12 Apr 2006
-    - corrected bug on system_back. Child process run the parent code
-      when exec failed (reported by Albert Vila).
+        - corrected bug on system_back. Child process run the parent
+          code when exec failed (reported by Albert Vila).
 
 1.16  13 Apr 2005
 	- added support for "weigh" factor
