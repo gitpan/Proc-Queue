@@ -17,7 +17,7 @@ print "ok 1\n";
 
 ######################### End of black magic.
 
-print "2..8\n";
+print "2..10\n";
 
 # test that not more than SIZE childs are running at the same time
 $ok=1;
@@ -114,3 +114,33 @@ foreach my $i (1..5) {
 }
 $ok&&=all_exit_ok(@pids);
 print $ok ? "ok 8\n" : "not ok 8\n";
+
+
+# testing allow_excess(0)
+Proc::Queue::size(7);
+Proc::Queue::allow_excess(0);
+
+$ok=0;
+@pids=();
+foreach my $i (1..5) {
+  push @pids, run_back {
+    sleep 1;
+    exit(0)
+  };
+  $ok=1 if running_now == 6;
+}
+$ok&&=all_exit_ok(@pids);
+print $ok ? "ok 9\n" : "not ok 9\n";
+
+# ... but never more
+$ok=1;
+@pids=();
+foreach my $i (1..5) {
+  push @pids, run_back {
+    sleep 1;
+    exit(0)
+  };
+  $ok=0 if running_now > 6;
+}
+$ok&&=all_exit_ok(@pids);
+print $ok ? "ok 10\n" : "not ok 10\n";

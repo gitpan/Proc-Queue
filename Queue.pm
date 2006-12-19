@@ -2,7 +2,7 @@ package Proc::Queue;
 
 require 5.006;
 
-our $VERSION = '1.18';
+our $VERSION = '1.19';
 
 use strict;
 # use warnings;
@@ -33,7 +33,9 @@ my $debug=0; # shows debug info.
 my $trace=0; # shows function calls.
 my $delay=0; # delay between fork calls.
 my $ignore_childs=0; # similar to $SIG{CHILD}='IGNORE';
+
 my $weight=1;
+my $allow_excess=1;
 
 my $last=0; # last time fork was called.
 
@@ -94,7 +96,16 @@ sub weight {
   croak "invalid value for Proc::Queue weight ($_[0]), min value is 1"
     unless int($_[0])>=1;
   $weight=int($_[0]);
+  carp "Proc weight set to $weight, it was $old_weight" if $debug;
   $old_weight;
+}
+
+sub  allow_excess {
+  return $allow_excess unless @_;
+  my $old_allow_excess=$allow_excess;
+  $allow_excess=!!$_[0];
+  carp "allow_excess set to $allow_excess, it was $allow_excess" if $debug;
+  $old_allow_excess;
 }
 
 sub debug {
@@ -264,7 +275,8 @@ sub _fork () {
 
 sub new_fork () {
   carp "Proc::Queue::fork called" if $trace;
-  while($queue_now>=$queue_size) {
+  while($queue_now and
+        $queue_now + ($allow_excess ? 1 : $weight) > $queue_size) {
     carp "Waiting for some process to finish" if $debug;
     my $nw;
     if (($nw=_wait) != -1) {
@@ -563,6 +575,20 @@ Valid weight values are integers greater than zero.
 
 Remember to reset the weight back to 1 (or whatever) after the heavier
 processes have been forked!.
+
+=item allow_excess(), allow_excess($allow_excess)
+
+by default the next queued process will be started as soon as the
+number of running processes is smaller than the queue size--this is
+regardless of the weight of the next queued process, so the queue
+could become overloaded.  Setting C<allow_excess> to false forces the
+next queued process to wait until there is room for it in the queue,
+that is, the size of the queue less the weighted number of currently
+running processes must be no smaller than the weight of the next
+queued process in order for the next process to start.
+
+Setting C<allow_excess> to any value greater than zero (default is 1) resets
+the default behavior.
 
 =item ignore_childs($on)
 
