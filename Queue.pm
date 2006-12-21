@@ -2,7 +2,7 @@ package Proc::Queue;
 
 require 5.006;
 
-our $VERSION = '1.19';
+our $VERSION = '1.20';
 
 use strict;
 # use warnings;
@@ -58,7 +58,8 @@ sub import {
         or $o eq 'trace'
 	or $o eq 'delay'
 	or $o eq 'weight'
-	or $o eq 'ignore_childs') {
+	or $o eq 'ignore_childs'
+        or $o eq 'allow_excess') {
       $#opts>$i or croak "option '$o' needs a value";
       my $value=$opts[$i+1];
       { no strict qw( subs refs );
@@ -100,14 +101,6 @@ sub weight {
   $old_weight;
 }
 
-sub  allow_excess {
-  return $allow_excess unless @_;
-  my $old_allow_excess=$allow_excess;
-  $allow_excess=!!$_[0];
-  carp "allow_excess set to $allow_excess, it was $allow_excess" if $debug;
-  $old_allow_excess;
-}
-
 sub debug {
   return $debug unless @_;
   my $old_debug=$debug;
@@ -134,6 +127,20 @@ sub trace {
     carp "trace mode OFF" if $debug;
   }
   return $old_trace;
+}
+
+sub  allow_excess {
+  return $allow_excess unless @_;
+  my $old_allow_excess=$allow_excess;
+  if ($_[0]) {
+    $allow_excess=1;
+    carp "allow_excess mode ON" if $debug;
+  }
+  else {
+    $allow_excess=0;
+    carp "allow_excess mode OFF" if $debug;
+  }
+  $old_allow_excess;
 }
 
 sub ignore_childs {
