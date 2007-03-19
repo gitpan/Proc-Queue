@@ -2,7 +2,8 @@ Changes
 MANIFEST
 README
 Makefile.PL
-Queue.pm
-test.pl
-example.pl
+lib/Proc/Queue.pm
+samples/sample1.pl
 META.yml                                 Module meta-data (added by MakeMaker)
+t/run.t
+t/pods.t

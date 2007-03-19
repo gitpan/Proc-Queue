@@ -1,7 +1,8 @@
 use ExtUtils::MakeMaker;
 
-WriteMakefile(
-    'NAME'		=> 'Proc::Queue',
-    'VERSION_FROM'	=> 'Queue.pm', # finds $VERSION
-    'PREREQ_PM'		=> {}, # e.g., Module::Name => 1.1
-);
+WriteMakefile( NAME => 'Proc::Queue',
+               VERSION_FROM => 'lib/Proc/Queue.pm',
+               ABSTRACT_FROM => 'lib/Proc/Queue.pm',
+               AUTHOR => 'Salvador Fandiño <sfandino@yahoo.com>',
+               # LICENSE => 'perl',
+               PREREQ_PM => { Test::More => 0} );

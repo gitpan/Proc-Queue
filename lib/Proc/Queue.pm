@@ -2,7 +2,7 @@ package Proc::Queue;
 
 require 5.006;
 
-our $VERSION = '1.20';
+our $VERSION = '1.21';
 
 use strict;
 # use warnings;
@@ -21,6 +21,7 @@ our %EXPORT_TAGS = ( all => [ qw( fork_now
 				  system_back_now
 				  all_exit_ok
 				  running_now ) ] );
+
 our @EXPORT_OK = ( @{ $EXPORT_TAGS{'all'} } );
 our @EXPORT = qw();
 
@@ -685,6 +686,7 @@ expected to be a function name to be imported.
 
   use Proc::Queue size=>10, ':all';
 
+=back
 
 =head2 BUGS
 
