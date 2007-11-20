@@ -2,7 +2,7 @@ package Proc::Queue;
 
 require 5.006;
 
-our $VERSION = '1.21';
+our $VERSION = '1.22';
 
 use strict;
 # use warnings;
@@ -33,7 +33,7 @@ my $queue_size=4; # max number of councurrent processes running.
 my $debug=0; # shows debug info.
 my $trace=0; # shows function calls.
 my $delay=0; # delay between fork calls.
-my $ignore_childs=0; # similar to $SIG{CHILD}='IGNORE';
+my $ignore_children=0; # similar to $SIG{CHILD}='IGNORE';
 
 my $weight=1;
 my $allow_excess=1;
@@ -59,7 +59,8 @@ sub import {
         or $o eq 'trace'
 	or $o eq 'delay'
 	or $o eq 'weight'
-	or $o eq 'ignore_childs'
+        or $o eq 'ignore_childs'
+	or $o eq 'ignore_children'
         or $o eq 'allow_excess') {
       $#opts>$i or croak "option '$o' needs a value";
       my $value=$opts[$i+1];
@@ -144,23 +145,25 @@ sub  allow_excess {
   $old_allow_excess;
 }
 
-sub ignore_childs {
-  return $ignore_childs unless @_;
-  my $old_ignore_childs=$ignore_childs;
+sub ignore_children {
+  return $ignore_children unless @_;
+  my $old_ignore_children=$ignore_children;
   if ($_[0]) {
-    $ignore_childs=1;
-    carp "ignore_childs mode ON" if $debug;
+    $ignore_children=1;
+    carp "ignore_children mode ON" if $debug;
   }
   else {
-    $ignore_childs=0;
-    carp "ignore_childs mode OFF" if $debug;
+    $ignore_children=0;
+    carp "ignore_children mode OFF" if $debug;
   }
-  return $old_ignore_childs;
+  return $old_ignore_children;
 }
+
+*ignore_childs = \&ignore_childs;
 
 # sub to store internally captured processes
 sub _push_captured {
-  push @captured, shift,$? unless $ignore_childs;
+  push @captured, shift,$? unless $ignore_children;
   croak "captured stack is corrupted" if (@captured & 1)
 }
 
@@ -291,7 +294,7 @@ sub new_fork () {
       _push_captured $nw;
     }
     else {
-      carp "Proc queue seems to be corrupted, $queue_now childs lost";
+      carp "Proc queue seems to be corrupted, $queue_now children lost";
       last;
     }
   }
@@ -409,7 +412,7 @@ sub all_exit_ok {
       return 0;
     }
   }
-  carp "All childs run ok" if $debug;
+  carp "All children run ok" if $debug;
   return 1;
 }
 
@@ -442,8 +445,8 @@ Proc::Queue - limit the number of child processes running
   package other;
   use POSIX ":sys_wait_h"; # imports WNOHANG
 
-  # this loop creates new childs, but Proc::Queue makes it wait every
-  # time the limit (4) is reached until enough childs exit
+  # this loop creates new children, but Proc::Queue makes it wait every
+  # time the limit (4) is reached until enough children exit
   foreach (1..100) {
     my $f=fork;
     if(defined ($f) and $f==0) {
@@ -452,7 +455,7 @@ Proc::Queue - limit the number of child processes running
       print "-- I'm tired, going away $$\n";
       exit(0)
     }
-    1 while waitpid(-1, WNOHANG)>0; # reaps childs
+    1 while waitpid(-1, WNOHANG)>0; # reaps children
   }
 
   Proc::Queue::size(10); # changing limit to 10 concurrent processes
@@ -510,7 +513,7 @@ to stop too many processes for starting in a short time interval.
 
 Child processes continue to use the modified functions, but their
 queues are reset and the maximun process number for them is set to 1
-(anyway, childs can change their queue size themselves).
+(anyway, children can change their queue size themselves).
 
 Proc::Queue doesn't work if CHLD signal handler is set to
 C<IGNORE>.  
@@ -518,14 +521,14 @@ C<IGNORE>.
 Internally, Proc::Queue, automatically catches zombies and stores
 their exit status in a private hash. To avoid leaking memory in long
 running programs you have to call C<wait> or C<waitpid> to delete
-entries from that hash or alternatively active the C<ignore_childs>
+entries from that hash or alternatively active the C<ignore_children>
 mode:
 
-  Proc::Queue::ignore_childs(1)
+  Proc::Queue::ignore_children(1)
 
 or
 
-  use Proc::Queue ignore_childs=>1, ...
+  use Proc::Queue ignore_children=>1, ...
 
 
 =head2 EXPORT
@@ -598,11 +601,11 @@ queued process in order for the next process to start.
 Setting C<allow_excess> to any value greater than zero (default is 1) resets
 the default behavior.
 
-=item ignore_childs($on)
+=item ignore_children($on)
 
 calling
 
-  Proc::Queue::ignore_childs(1);
+  Proc::Queue::ignore_children(1);
 
 is the equivalent to
 
@@ -625,7 +628,7 @@ Other utility subroutines that can be imported from Proc::Queue are:
 =item fork_now()
 
 Sometimes you would need to fork a new child without waiting for other
-childs to exit if the queue is full, C<fork_now> does that. It is
+children to exit if the queue is full, C<fork_now> does that. It is
 exportable so you can do...
 
   use Proc::Queue size => 5, qw(fork_now), debug =>1;
@@ -653,7 +656,7 @@ A mix between run_back and fork_now.
 =item system_back(@command)
 
 Similar to the C<system> call but runs the command in the background
-and waits for other childs to exit first if there are already too many
+and waits for other children to exit first if there are already too many
 running.
 
 Returns the pid of the forked process or undef if the program was not
@@ -661,7 +664,7 @@ found.
 
 =item system_back_now(@command)
 
-As C<system_back> but without checking if the maximun number of childs
+As C<system_back> but without checking if the maximun number of children
 allowed has been reached.
 
 =item all_exit_ok(@pid)
@@ -702,14 +705,10 @@ L<Time::HiRes>, L<Parallel::ForkManager>. The C<example.pl> script
 contained in the module distribution.
 
 
-=head1 AUTHOR
-
-Salvador FandiE<ntilde>o E<lt>sfandino@yahoo.comE<gt>
-
-
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2001, 2002, 2003, 2005 by Salvador FandiE<ntilde>o
+Copyright 2001-2003, 2005-2007 by Salvador FandiE<ntilde>o
+E<lt>sfandino@yahoo.comE<gt>
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

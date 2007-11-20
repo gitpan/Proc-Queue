@@ -10,7 +10,7 @@ BEGIN {
     print "ok 1\n";
 }
 
-# test that not more than SIZE childs are running at the same time
+# test that not more than SIZE children are running at the same time
 $ok=1;
 foreach (1..5) {
   my $f=fork;

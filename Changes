@@ -1,6 +1,9 @@
 Revision history for Perl extension Proc::Queue
 
-1.21  19 Mar 2006
+1.22  20 Nov 2007
+        - ignore_childs => ignore_children
+
+1.21  19 Mar 2007
         - pod errors corrected
         - check pods
 
