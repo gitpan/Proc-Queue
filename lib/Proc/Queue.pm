@@ -2,7 +2,7 @@ package Proc::Queue;
 
 require 5.006;
 
-our $VERSION = '1.22';
+our $VERSION = '1.23';
 
 use strict;
 # use warnings;
@@ -159,7 +159,7 @@ sub ignore_children {
   return $old_ignore_children;
 }
 
-*ignore_childs = \&ignore_childs;
+*ignore_childs = \&ignore_children;
 
 # sub to store internally captured processes
 sub _push_captured {
@@ -707,7 +707,7 @@ contained in the module distribution.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2001-2003, 2005-2007 by Salvador FandiE<ntilde>o
+Copyright 2001-2003, 2005-2008 by Salvador FandiE<ntilde>o
 E<lt>sfandino@yahoo.comE<gt>
 
 This library is free software; you can redistribute it and/or modify
